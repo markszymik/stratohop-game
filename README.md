@@ -179,8 +179,8 @@ The build nests the game in an actual folder — `dist/stratohop/` — and the
 Pages Functions live at `functions/stratohop/api/*` to match. Bind
 `cloudarcade.app` directly to this Pages project (dashboard → the project →
 Custom domains) and [cloudarcade.app/stratohop/](https://cloudarcade.app/stratohop/)
-just works: no proxy, no Worker. The domain root 302-redirects to the game
-for now (`dist/_redirects`).
+just works: no proxy, no Worker. The domain root serves the arcade
+landing page (`arcade/index.html` → `dist/index.html`).
 
 The game is fully path-agnostic (every client URL is relative), so it also
 still works at the deployment root. The dev server mirrors the mount:

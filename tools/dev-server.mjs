@@ -60,11 +60,7 @@ const PREFIX = '/stratohop';
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
-    if (url.pathname === '/') { // mirror production: root redirects to the game
-      res.writeHead(302, { Location: PREFIX + '/' + url.search });
-      res.end();
-      return;
-    }
+    if (url.pathname === '/') url.pathname = '/arcade/index.html'; // landing page
     if (url.pathname === PREFIX) { // no trailing slash → relative URLs break
       res.writeHead(301, { Location: PREFIX + '/' + url.search });
       res.end();

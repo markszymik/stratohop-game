@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CloudArcade — fun browser games in the clouds</title>
+<meta name="description" content="Experimental, fun browser games by Mark. First up: Stratohop, a multiplayer parkour game in the sky." />
+<style>
+  @font-face {
+    font-family: 'Baloo 2';
+    src: url('/stratohop/assets/fonts/Baloo2.ttf') format('truetype');
+    font-weight: 400 800;
+    font-display: swap;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    color: #fff;
+    background: linear-gradient(180deg, #0b1c33 0%, #17335a 45%, #2d5b8f 80%, #4d83b8 100%);
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; overflow-x: hidden;
+  }
+  /* drifting clouds */
+  .cloud {
+    position: fixed; border-radius: 999px; background: rgba(255,255,255,0.10);
+    filter: blur(2px); pointer-events: none; animation: drift linear infinite;
+  }
+  .cloud::before, .cloud::after {
+    content: ''; position: absolute; border-radius: 50%; background: inherit;
+  }
+  .cloud::before { width: 55%; height: 160%; left: 12%; top: -60%; }
+  .cloud::after { width: 45%; height: 130%; right: 14%; top: -40%; }
+  @keyframes drift { from { transform: translateX(-30vw); } to { transform: translateX(130vw); } }
+  .star { position: fixed; width: 3px; height: 3px; border-radius: 50%; background: #fff; opacity: 0.7; animation: twinkle 3s ease-in-out infinite; pointer-events: none; }
+  @keyframes twinkle { 50% { opacity: 0.15; } }
+
+  main { position: relative; z-index: 1; width: min(720px, 92vw); text-align: center; padding: 9vh 0 40px; flex: 1; }
+  h1 {
+    font-size: clamp(44px, 9vw, 76px); font-weight: 800; letter-spacing: 1px;
+    background: linear-gradient(180deg, #ffde9c, #ff7b2e);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 0 rgba(0,0,0,0.25));
+  }
+  .tagline { font-size: clamp(16px, 2.6vw, 20px); font-weight: 700; color: #cfe6ff; margin: 8px 0 46px; }
+
+  .game-card {
+    display: block; text-decoration: none; color: inherit;
+    background: rgba(255,255,255,0.08); border: 3px solid rgba(255,255,255,0.25);
+    border-radius: 24px; padding: 28px 30px; margin-bottom: 20px;
+    transition: transform 0.18s, border-color 0.18s, background 0.18s;
+  }
+  .game-card:hover { transform: translateY(-3px) scale(1.015); border-color: #ffb347; background: rgba(255,255,255,0.12); }
+  .game-emoji { font-size: 46px; display: block; margin-bottom: 6px; }
+  .game-name { font-size: 30px; font-weight: 800; color: #ffd257; }
+  .game-desc { font-weight: 700; color: #d9e9ff; font-size: 16px; margin: 6px 0 18px; line-height: 1.5; }
+  .play-btn {
+    display: inline-block; padding: 13px 46px; border-radius: 999px;
+    background: linear-gradient(180deg, #ffb347, #ff7b2e); color: #fff;
+    font-weight: 800; font-size: 19px; letter-spacing: 1px;
+    box-shadow: 0 5px 0 #c74e10; text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  }
+  .game-card:hover .play-btn { filter: brightness(1.06); }
+
+  .soon {
+    border-style: dashed; opacity: 0.65; cursor: default;
+  }
+  .soon:hover { transform: none; border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.08); }
+  .soon .game-name { color: #9adfff; font-size: 22px; }
+  .soon .game-desc { margin-bottom: 2px; }
+
+  footer {
+    position: relative; z-index: 1; padding: 26px 16px 34px; text-align: center;
+    font-weight: 700; font-size: 14px; color: rgba(255,255,255,0.6); line-height: 2;
+  }
+  footer a { color: #9adfff; text-decoration: none; }
+  footer a:hover { color: #fff; }
+</style>
+</head>
+<body>
+<script>
+  // sprinkle stars + clouds
+  for (let i = 0; i < 26; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.top = Math.random() * 45 + 'vh';
+    s.style.animationDelay = (Math.random() * 3) + 's';
+    document.body.appendChild(s);
+  }
+  for (let i = 0; i < 5; i++) {
+    const c = document.createElement('div');
+    c.className = 'cloud';
+    const w = 120 + Math.random() * 180;
+    c.style.width = w + 'px';
+    c.style.height = w * 0.32 + 'px';
+    c.style.top = (8 + Math.random() * 70) + 'vh';
+    c.style.animationDuration = (70 + Math.random() * 80) + 's';
+    c.style.animationDelay = (-Math.random() * 90) + 's';
+    document.body.appendChild(c);
+  }
+</script>
+
+<main>
+  <h1>☁️ CLOUDARCADE</h1>
+  <p class="tagline">Experimental, fun browser games — made in the clouds, played anywhere.</p>
+
+  <a class="game-card" href="/stratohop/">
+    <span class="game-emoji">🏁</span>
+    <span class="game-name">Stratohop</span>
+    <p class="game-desc">Multiplayer parkour in the sky — race your friends across moving
+    platforms, dodge the red bars, reach the flag. Rooms, leaderboards, works on iPads.</p>
+    <span class="play-btn">PLAY ▶</span>
+  </a>
+
+  <div class="game-card soon">
+    <span class="game-emoji">🎁</span>
+    <span class="game-name">More games coming soon…</span>
+    <p class="game-desc">This arcade is just getting started — new experiments land here first.</p>
+  </div>
+</main>
+
+<footer>
+  Made by Mark · follow <a href="https://x.com/markszymik" target="_blank" rel="noopener"><b>@markszymik</b></a> on 𝕏<br/>
+  Powered by <a href="https://www.cloudflare.com" target="_blank" rel="noopener">Cloudflare</a>
+  &amp; <a href="https://vask.dev" target="_blank" rel="noopener">Vask</a> — the Pusher alternative
+</footer>
+</body>
+</html>

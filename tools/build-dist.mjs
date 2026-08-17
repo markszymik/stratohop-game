@@ -23,8 +23,7 @@ for (const entry of ALLOW) {
   cpSync(entry, `dist/stratohop/${entry}`, { recursive: true });
   console.log(`copied: stratohop/${entry}`);
 }
-// the arcade root: for now just send visitors to the game. 302 (not 301) so
-// nothing sticks in caches when a real cloudarcade.app landing page arrives.
-writeFileSync('dist/_redirects', '/ /stratohop/ 302\n');
-console.log('wrote: _redirects (/ → /stratohop/)');
+// the arcade landing page lives at the domain root
+cpSync('arcade/index.html', 'dist/index.html');
+console.log('copied: index.html (arcade landing page)');
 console.log('\ndist/ ready — deploy with: npx wrangler pages deploy');
