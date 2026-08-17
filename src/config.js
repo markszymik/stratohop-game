@@ -16,7 +16,9 @@ export const Config = {
   VASK_WS_HOST: 'wss.vask.dev',
   VASK_WS_PORT: '443',
   VASK_FORCE_TLS: 'true',   // set 'false' for a local soketi dev server
-  VASK_AUTH_ENDPOINT: '/api/vask/auth',
+  // relative on purpose: resolves against the page URL, so the game works at
+  // the domain root AND mounted under a subpath (e.g. /game/stratohop/)
+  VASK_AUTH_ENDPOINT: 'api/vask/auth',
 };
 
 export async function loadConfig() {

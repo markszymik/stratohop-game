@@ -52,9 +52,22 @@ const MIME = {
   '.md': 'text/plain', '.toml': 'text/plain',
 };
 
+// The game must work mounted under a subpath (production: a Worker proxies
+// yourdomain.com/game/stratohop/* → the Pages deployment). Mirror that here
+// so it's testable: http://localhost:8788/game/stratohop/
+const PREFIX = '/game/stratohop';
+
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
+    if (url.pathname === PREFIX) { // no trailing slash → relative URLs break
+      res.writeHead(301, { Location: PREFIX + '/' + url.search });
+      res.end();
+      return;
+    }
+    if (url.pathname.startsWith(PREFIX + '/')) {
+      url.pathname = url.pathname.slice(PREFIX.length) || '/';
+    }
 
     if (req.method === 'POST' && url.pathname === '/api/vask/auth') {
       const body = await new Promise((resolve) => {

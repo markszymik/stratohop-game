@@ -15,7 +15,7 @@ export class Scores {
   static async top(mapIndex) {
     if (!Scores.available) return null;
     try {
-      const r = await fetch(`/api/scores?map=${mapIndex}`, { cache: 'no-store' });
+      const r = await fetch(`api/scores?map=${mapIndex}`, { cache: 'no-store' });
       if (!r.ok) throw new Error(String(r.status));
       return (await r.json()).scores;
     } catch {
@@ -28,7 +28,7 @@ export class Scores {
   static async submit(mapIndex, name, time) {
     if (!Scores.available) return null;
     try {
-      const r = await fetch('/api/scores', {
+      const r = await fetch('api/scores', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ map: mapIndex, name, time }),
