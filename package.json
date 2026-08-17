@@ -6,7 +6,8 @@
     "start": "node tools/dev-server.mjs",
     "dev": "node tools/dev-server.mjs --mock",
     "static": "npx serve .",
-    "validate": "node tools/validate-maps.mjs"
+    "validate": "node tools/validate-maps.mjs",
+    "deploy": "node tools/build-dist.mjs && npx wrangler pages deploy"
   },
   "devDependencies": {
     "ws": "^8.18.0"

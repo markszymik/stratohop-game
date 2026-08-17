@@ -27,3 +27,6 @@ _to_delete/
 
 # wrangler local cache
 .wrangler/
+
+# deploy staging dir (rebuilt by tools/build-dist.mjs)
+dist/
