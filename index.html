@@ -181,6 +181,14 @@
   }
   #private-label input { width: 17px; height: 17px; accent-color: #ffb347; cursor: pointer; }
 
+  #invite-btn {
+    margin: -10px 0 18px; padding: 10px 26px; border-radius: 999px;
+    border: 3px solid rgba(140,220,255,0.5); background: rgba(89,183,255,0.18);
+    color: #9adfff; font-family: inherit; font-weight: 800; font-size: 15px;
+    letter-spacing: 1px; cursor: pointer; transition: all 0.15s;
+  }
+  #invite-btn:hover { background: rgba(89,183,255,0.35); color: #fff; transform: scale(1.04); }
+
   #rooms {
     width: 340px; max-height: 148px; overflow-y: auto; margin: -8px 0 20px;
     border-radius: 16px; background: rgba(0,0,0,0.18); padding: 8px;
@@ -310,6 +318,7 @@
       <input type="checkbox" id="room-private" /> 🔒 Private
     </label>
   </div>
+  <button id="invite-btn" style="display:none">💌 INVITE FRIENDS</button>
   <div id="rooms" style="display:none"></div>
   <div class="chars" id="chars">
     <div class="char-btn selected" data-char="Knight"><span class="emoji">🛡️</span>Knight</div>

@@ -57,18 +57,42 @@ buildMap(state.mapIndex); // pretty backdrop behind the menu
 if (Net.available) document.getElementById('room-row').style.display = 'flex';
 const roomInput = document.getElementById('room-input');
 const privateBox = document.getElementById('room-private');
+const genCode = () => Array.from({ length: 4 }, () =>
+  'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join('');
+
+// multiplayer by default: the field starts with a room, so PLAY puts people
+// together. Auto-fill follows the best open public room; any manual edit
+// (typing, clearing, 🎲, invite link) takes ownership and stops it.
+let roomTouched = false;
+if (Net.available) roomInput.value = genCode();
+roomInput.addEventListener('input', () => { roomTouched = true; });
 document.getElementById('room-gen').addEventListener('click', () => {
-  roomInput.value = Array.from({ length: 4 }, () =>
-    'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join('');
+  roomTouched = true;
+  roomInput.value = genCode();
 });
 
 // shareable link: ?room=CODE prefills the room box
 const urlRoom = (new URLSearchParams(location.search).get('room') || '')
   .toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-if (urlRoom) roomInput.value = urlRoom;
+if (urlRoom) { roomInput.value = urlRoom; roomTouched = true; }
 
 const shareLink = () =>
   `${location.origin}${location.pathname}?room=${encodeURIComponent(Net.room || '')}`;
+
+// 💌 invite friends: copy a join link for the room in the field
+if (Net.available) document.getElementById('invite-btn').style.display = '';
+document.getElementById('invite-btn').addEventListener('click', async () => {
+  let code = roomInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!code) { code = genCode(); roomInput.value = code; }
+  roomTouched = true; // inviting = committing to this room
+  const link = `${location.origin}${location.pathname}?room=${encodeURIComponent(code)}`;
+  try {
+    await navigator.clipboard.writeText(link);
+    UI.toast('Invite link copied — send it to your friends! 💌', '#9adfff');
+  } catch {
+    UI.toast(`Share this room code: ${code}`, '#9adfff');
+  }
+});
 
 // live "open rooms" list on the menu (public rooms advertise to the lobby)
 if (Net.available) {
@@ -78,9 +102,16 @@ if (Net.available) {
     const menuOpen = !document.getElementById('menu').classList.contains('hidden');
     UI.setRoomList(menuOpen ? rooms : [], (code) => {
       roomInput.value = code;
+      roomTouched = true;
       privateBox.checked = false;
       startGame();
     });
+    // default room follows the best joinable open room until the player
+    // takes over the field — so plain PLAY lands friends together
+    if (!roomTouched && menuOpen && !Net.connected) {
+      const open = rooms.find((r) => !r.full);
+      if (open) roomInput.value = open.code;
+    }
   };
 }
 
