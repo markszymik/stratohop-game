@@ -18,6 +18,7 @@ export class Player {
   static APEX_WINDOW = 2.0;   // |vy| below this = apex → floatier, more air control
   static APEX_MULT = 0.55;    // gravity multiplier inside the apex window
   static MAX_FALL = 26;
+  static STEP_UP = 0.3;       // ledge forgiveness: clip a step's lip while falling → land on it
   static HALF = new THREE.Vector3(0.35, 0.85, 0.35); // half extents, y = half height
   static COYOTE = 0.12;
   static BUFFER = 0.14;
@@ -315,6 +316,16 @@ export class Player {
           Player.vel.y = 0;
         }
       } else {
+        // Ledge forgiveness: falling across a step's lip, feet only just
+        // below its top. A human reads that as "I landed on it" — ejecting
+        // sideways here felt like being thrown off the step. Hoist to just
+        // above the top and let the Y pass finish a normal landing (squash,
+        // animation, groundPlatform) with forward momentum intact.
+        const lip = (m.y + ph.y) - Player.pos.y;
+        if (Player.vel.y <= 0 && lip > 0 && lip <= Player.STEP_UP) {
+          Player.pos.y = m.y + ph.y + 0.02;
+          continue;
+        }
         const sign = Player.pos[axis] > m[axis] ? 1 : -1;
         const pHalf = axis === 'x' ? ph.x : ph.z;
         const myHalf = axis === 'x' ? h.x : h.z;
