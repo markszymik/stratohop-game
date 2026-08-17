@@ -121,6 +121,22 @@ export class UI {
     UI.el('confetti').innerHTML = '';
   }
 
+  // multiplayer: lock NEXT MAP until the whole room has finished
+  static setWinWait(done, total) {
+    const btn = UI.el('next-btn');
+    if (total > 1 && done < total) {
+      btn.disabled = true;
+      btn.textContent = `⏳ WAITING FOR FRIENDS… ${done}/${total}`;
+    } else {
+      const wasWaiting = btn.disabled;
+      btn.disabled = false;
+      btn.textContent = 'NEXT MAP ▶';
+      if (wasWaiting && total > 1 && !UI.el('win').classList.contains('hidden')) {
+        UI.toast('Everyone made it! 🎉', '#ffd257');
+      }
+    }
+  }
+
   static spawnConfetti() {
     const box = UI.el('confetti');
     box.innerHTML = '';

@@ -37,6 +37,7 @@ export class Net {
   static lastSent = '';
   static lastSentAt = 0;
   static publicRooms = {};    // code -> {count, map, at}
+  static finished = new Set(); // member ids that finished the current map
   static authParams = { name: 'Player', character: 'Knight' }; // mutated before join
 
   // hooks main.js fills in
@@ -46,6 +47,7 @@ export class Net {
   static onMapChange = null;   // (mapIndex) => void
   static onPeerFinish = null;  // (name, seconds) => void
   static onRoomsUpdate = null; // ([{code, count, map}]) => void
+  static onFinishedChange = null; // () => void — someone finished/joined/left
 
   static currentMapIndex = 0;  // main.js keeps these in sync
   static currentMapName = '';
@@ -157,14 +159,17 @@ export class Net {
       if (Net.isHost) Net.sendMap(); // catch the newcomer up
       Net.lastSent = ''; // force a state send so they see us immediately
       setTimeout(() => Net.advertise(), 500); // refresh the player count
+      Net.onFinishedChange && Net.onFinishedChange(); // newcomer hasn't finished
     });
 
     ch.bind('pusher:member_removed', (m) => {
       Ghosts.remove(m.id);
+      Net.finished.delete(m.id); // a leaver must not block the room
       Net.recomputeHost();
       Net.onRoster && Net.onRoster(Net.playerCount());
       Net.onPeerLeave && Net.onPeerLeave(m.info?.name || 'Player');
       setTimeout(() => Net.advertise(), 500);
+      Net.onFinishedChange && Net.onFinishedChange();
     });
 
     ch.bind('client-state', (data, metadata) => {
@@ -175,8 +180,10 @@ export class Net {
       if (Number.isInteger(data?.map)) Net.onMapChange && Net.onMapChange(data.map);
     });
 
-    ch.bind('client-finish', (data) => {
+    ch.bind('client-finish', (data, metadata) => {
+      if (metadata?.user_id) Net.finished.add(metadata.user_id);
       Net.onPeerFinish && Net.onPeerFinish(data?.name || 'Player', +data?.time || 0);
+      Net.onFinishedChange && Net.onFinishedChange();
     });
   }
 
@@ -220,7 +227,30 @@ export class Net {
   }
 
   static sendFinish(name, time) {
-    if (Net.subscribed) Net.channel.trigger('client-finish', { name, time: +time.toFixed(1) });
+    if (!Net.subscribed) return;
+    Net.finished.add(Net.myId);
+    Net.channel.trigger('client-finish', { name, time: +time.toFixed(1) });
+    Net.onFinishedChange && Net.onFinishedChange();
+  }
+
+  // {done, total} finish tally for the current map (solo → trivially complete)
+  static finishTally() {
+    if (!Net.subscribed || !Net.channel?.members) return { done: 1, total: 1 };
+    let done = 0, total = 0;
+    Net.channel.members.each((m) => {
+      total += 1;
+      if (Net.finished.has(m.id)) done += 1;
+    });
+    return { done, total };
+  }
+
+  static get allFinished() {
+    const t = Net.finishTally();
+    return t.done >= t.total;
+  }
+
+  static resetFinishes() {
+    Net.finished.clear();
   }
 
   // called every frame from the main loop

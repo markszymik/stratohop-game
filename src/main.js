@@ -162,10 +162,13 @@ async function startGame() {
   }
 }
 
+let lastLoadedMap = -1;
 function loadMap(index) {
   state.mapIndex = index;
   Net.currentMapIndex = index;
   Net.currentMapName = Maps[index].name;
+  if (index !== lastLoadedMap) Net.resetFinishes(); // new map — fresh tally (retry keeps it)
+  lastLoadedMap = index;
   if (Net.isHost) Net.sendMap();
   savePrefs();
   const map = Maps[index];
@@ -190,8 +193,10 @@ document.getElementById('again-btn').addEventListener('click', () => {
   loadMap(state.mapIndex);
 });
 document.getElementById('next-btn').addEventListener('click', () => {
+  if (Net.connected && !Net.allFinished) return; // locked: friends still playing
   UI.hideWin();
   loadMap((state.mapIndex + 1) % Maps.length);
+  if (Net.connected) Net.sendMap(); // whoever clicks moves the whole room
 });
 document.getElementById('menu-btn').addEventListener('click', () => {
   UI.hideWin();
@@ -210,6 +215,7 @@ Net.onPeerJoin = (name) => UI.toast(`${name} joined! 👋`, '#9adfff');
 Net.onPeerLeave = (name) => UI.toast(`${name} left`, '#c8d8e8');
 Net.onMapChange = (i) => {
   if (i !== state.mapIndex && Maps[i]) {
+    UI.hideWin(); // we may be sitting on the win screen when the room moves on
     UI.toast('Off to the next map! 🗺️', '#ffd257');
     loadMap(i);
   }
@@ -224,11 +230,18 @@ Player.onCheckpoint = (index) => {
   UI.setCheckpoint(index, Level.checkpoints.length);
   UI.toast('Checkpoint! ⭐');
 };
+const refreshWinWait = () => {
+  const t = Net.finishTally();
+  UI.setWinWait(t.done, t.total);
+};
+Net.onFinishedChange = refreshWinWait;
+
 Player.onWin = () => {
   if (!state.running) return;
   state.running = false;
   Net.sendFinish(state.name, state.time);
   UI.showWin(state.time, state.deaths);
+  refreshWinWait(); // in a room: lock NEXT MAP until everyone finishes
 };
 
 const origDie = Player.die.bind(Player);
