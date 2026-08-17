@@ -1,7 +1,8 @@
 # ☁️ Stratohop
 
-*A Roblox-style parkour ("obby") game in the sky — run, jump and ride moving
-platforms between the clouds, dodge the red bars, reach the flag.*
+*A Roblox-style multiplayer parkour ("obby") game in the sky — run, jump and
+ride moving platforms between the clouds, dodge the red bars, race your
+friends to the flag. Public rooms, shareable invite links, leaderboards.*
 
 ![MIT license](https://img.shields.io/badge/license-MIT-brightgreen)
 ![three.js](https://img.shields.io/badge/three.js-r169-049EF4)
@@ -15,18 +16,19 @@ compatible).
 
 ## Play it
 
-Any static file server works (ES modules + binary assets rule out `file://`):
-
 ```bash
-npx serve .          # or: python3 -m http.server 8000  /  php -S localhost:8000
+npm run dev          # full experience incl. multiplayer — local mock Vask, no account needed
+npm start            # dev server against real Vask (needs .env + .dev.vars, see below)
+npm run static       # bare static server — solo play only (no auth endpoint → no rooms)
 ```
 
-Then open the printed URL, type your name, pick a hero and a map, and go.
+Then open http://localhost:8788, type your name, pick a hero and a map, and
+go. Type a room code (or hit 🎲) before playing to open a multiplayer room.
 
 | | | |
 |---|---|---|
-| ![Menu](docs/screens/menu.jpg) | ![Sunset](docs/screens/sunset.jpg) | ![Night](docs/screens/night.jpg) |
-| ![Hazards](docs/screens/hazards.jpg) | ![Dragon](docs/screens/dragon.jpg) | ![Win screen](docs/screens/win-screen.jpg) |
+| ![Menu](docs/screens/menu.jpg) | ![Multiplayer](docs/screens/multiplayer.jpg) | ![Win screen](docs/screens/win-screen.jpg) |
+| ![Sunset](docs/screens/sunset.jpg) | ![Night](docs/screens/night.jpg) | ![Hazards](docs/screens/hazards.jpg) |
 
 ## Features
 
@@ -41,6 +43,18 @@ Then open the printed URL, type your name, pick a hero and a map, and go.
   skeletal animation, plus floating player name tags
 - **Provably beatable maps**: a physics simulation validates every jump on
   every map (`npm run validate`)
+- **Multiplayer rooms** over [Vask](https://vask.dev) presence channels:
+  public rooms appear in a live **Open rooms** list on the start screen,
+  🔒 private rooms stay joinable by code or invite link (`?room=CODE`, one
+  tap on the HUD 🔑 pill copies it)
+- **Race together, move together**: everyone sees each other as smooth
+  interpolated ghosts with name tags, a tap-to-open 👥 roster shows who's
+  in and who's finished, and NEXT MAP unlocks only when the whole room is
+  done — then the room advances as one
+- **Leaderboards**: per-round finish order with medals on the win screen,
+  plus an optional global top-10 per map (Workers KV — see below)
+- **Touch controls**: floating analog joystick, camera drag, jump/respawn
+  buttons — plays great on iPads and phones
 
 ## Controls
 
@@ -62,14 +76,15 @@ src/Level.js        map construction, moving platforms, checkpoints, killbricks
 src/Player.js       character controller (custom AABB physics), animations
 src/Critters.js     bird flocks (animated GLBs) + procedural dragons
 src/CameraRig.js    third-person orbit camera
-src/Input.js        keyboard/mouse
-src/UI.js           HUD, toasts, win screen
+src/Input.js        keyboard/mouse + touch (joystick, camera drag, buttons)
+src/UI.js           HUD, toasts, win screen, roster, leaderboard panels
 src/NameTag.js      floating name sprites
-src/Net.js          multiplayer: rooms, state broadcast (Vask/Pusher protocol)
+src/Net.js          multiplayer: rooms, lobby adverts, finish tally (Vask/Pusher protocol)
 src/Ghosts.js       remote players: interpolated models + name tags
-functions/          Cloudflare Pages Function: presence-auth signer
+src/Scores.js       global leaderboard client (silent when unavailable)
+functions/          Pages Functions: presence-auth signer + leaderboard API
 src/maps/           MapBuilder DSL + 10 map definitions
-tools/              map reachability validator (Node)
+tools/              dev server (+mock Vask), map validator, headless tests
 vendor/             three.js r169 (vendored, no CDN)
 assets/             characters, birds, font
 ```
@@ -98,9 +113,9 @@ Setup:
    this is the public key, safe in any client.
 2. The presence-auth signer is a Cloudflare Pages Function
    (`functions/api/vask/auth.js`). Give it the key + **secret**:
-   - local: copy `.dev.vars.example` → `.dev.vars`, then run
-     `npx wrangler pages dev .` (plain static servers can't run the
-     auth function, so multiplayer needs wrangler locally)
+   - local: copy `.dev.vars.example` → `.dev.vars`, then run `npm start`
+     (plain static servers can't run the auth function, so multiplayer
+     needs the dev server — or `npm run dev` for the no-account mock)
    - production: `npx wrangler pages secret put VASK_KEY` and
      `... put VASK_SECRET`
 3. In the menu, type a room code (or hit 🎲) and share it with friends.
@@ -144,13 +159,19 @@ later is just editing `.env` — same client code, same protocol.
 
 ## Deploy (Cloudflare Pages)
 
-The game is a fully static site. Either connect the repo in the Cloudflare
-dashboard (**no build command**, output directory **`/`**), or deploy from
-the CLI:
+Deploys go through an **allowlisted `dist/`** (built by
+`tools/build-dist.mjs`) so private files can never end up on the CDN —
+wrangler ignores `.gitignore`, so never deploy the repo root directly.
 
 ```bash
-npx wrangler pages deploy      # uses wrangler.toml
+npm run deploy                 # builds dist/ then wrangler pages deploy
+npx wrangler pages secret put VASK_KEY     # once per project
+npx wrangler pages secret put VASK_SECRET
 ```
+
+Or connect the repo in the Cloudflare dashboard with build command
+`node tools/build-dist.mjs` and output directory **`dist`**. The
+leaderboard KV binding is optional — see the comment in `wrangler.toml`.
 
 ## Optional: premium dragon model
 

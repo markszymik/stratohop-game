@@ -89,9 +89,13 @@
 
   .overlay {
     position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; background: radial-gradient(ellipse at center, rgba(30,58,92,0.90), rgba(10,22,38,0.96));
-    color: #fff; z-index: 10; transition: opacity 0.5s; overflow: hidden;
+    justify-content: center; justify-content: safe center; /* scrollable when tall */
+    background: radial-gradient(ellipse at center, rgba(30,58,92,0.90), rgba(10,22,38,0.96));
+    color: #fff; z-index: 10; transition: opacity 0.5s; overflow: hidden auto;
+    padding: 24px 0;
   }
+  /* panels keep their height even when the menu is taller than the screen */
+  .overlay > * { flex-shrink: 0; }
   .overlay.hidden { opacity: 0; pointer-events: none; }
   .overlay h1 { font-size: 54px; letter-spacing: 1px; margin-bottom: 8px; font-weight: 900;
     background: linear-gradient(180deg, #ffde9c, #ff7b2e); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
