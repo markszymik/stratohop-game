@@ -124,6 +124,26 @@
   #hud-players { background: linear-gradient(180deg, #b48fff, #8a5fe0); }
   #hud-room { background: linear-gradient(180deg, #4fd8c3, #1fae9a); cursor: pointer; }
   #hud-room:hover { transform: scale(1.07); }
+  #hud-players { cursor: pointer; }
+  #hud-players:hover { transform: scale(1.07); }
+
+  #player-list {
+    position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 11;
+    width: 250px; border-radius: 16px; background: rgba(10, 25, 45, 0.82);
+    padding: 10px 12px; backdrop-filter: blur(4px);
+    font-family: 'Baloo 2', sans-serif;
+  }
+  .player-row {
+    display: flex; align-items: center; gap: 8px; padding: 5px 4px;
+    color: #fff; font-weight: 800; font-size: 15px;
+  }
+  .player-row .player-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .player-row em { font-style: normal; opacity: 0.55; font-size: 12px; }
+
+  #win-waiting {
+    color: #9adfff; font-weight: 800; font-size: 15px; margin: -6px 0 14px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
 
   #private-label {
     display: flex; align-items: center; gap: 6px; cursor: pointer;
@@ -203,6 +223,19 @@
   }
 
   .controls-box { margin-top: 24px; color: rgba(255,255,255,0.55); font-size: 13px; line-height: 1.9; text-align: center; font-weight: 700; }
+
+  .credit {
+    color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 700;
+    text-decoration: none; transition: color 0.15s;
+  }
+  .credit b { color: #9adfff; }
+  .credit:hover { color: #fff; }
+  a.credit { display: inline-block; margin-top: 14px; }
+  #vask-credit { display: block; margin-top: 4px; }
+  #game-credit {
+    position: fixed; top: 12px; right: 14px; z-index: 6; margin: 0;
+    font-size: 12px; opacity: 0.75; text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
   kbd { background: rgba(255,255,255,0.15); border-radius: 6px; padding: 2px 8px; font-family: inherit; }
 </style>
 </head>
@@ -223,6 +256,9 @@
   <div class="pill" id="hud-players" style="display:none">👥 1</div>
   <div class="pill" id="hud-room" style="display:none" title="Tap to copy the invite link">🔑</div>
 </div>
+<div id="player-list" style="display:none"></div>
+<a class="credit" id="game-credit" href="https://x.com/markszymik" target="_blank" rel="noopener"
+   style="display:none">by <b>@markszymik</b></a>
 <div class="hud" id="toast"></div>
 <div class="hud" id="hud-hint" style="display:none">
   <span>WASD move · Space jump · Drag mouse to look · R respawn</span>
@@ -252,6 +288,12 @@
     <kbd>W A S D</kbd> move &nbsp; <kbd>Space</kbd> jump &nbsp; <kbd>Mouse</kbd> camera<br/>
     Movement is camera-relative, Roblox style.
   </div>
+  <a class="credit" href="https://x.com/markszymik" target="_blank" rel="noopener">
+    Created by Mark · follow <b>@markszymik</b> on 𝕏
+  </a>
+  <a class="credit" id="vask-credit" href="https://vask.dev/" target="_blank" rel="noopener">
+    Multiplayer powered by <b>Vask</b> — the Pusher alternative
+  </a>
 </div>
 
 <div class="overlay hidden" id="win">
@@ -259,6 +301,7 @@
   <h1>YOU MADE IT! 🎉</h1>
   <div id="win-stats" class="stats-card"></div>
   <button class="big-btn mega" id="next-btn">NEXT MAP ▶</button>
+  <div id="win-waiting" style="display:none"></div>
   <div class="win-row">
     <button class="soft-btn" id="again-btn">🔄 Retry</button>
     <button class="soft-btn" id="menu-btn">🏠 Menu</button>

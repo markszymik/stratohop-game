@@ -5,6 +5,14 @@
 export class UI {
   static el(id) { return document.getElementById(id); }
 
+  // player names + map names travel over the network — always escape them
+  static esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  static CHAR_EMOJI = { Knight: '🛡️', Barbarian: '🪓', Mage: '🔮', Rogue: '🗡️' };
+
   static pop(id) {
     const el = UI.el(id);
     el.classList.remove('pop');
@@ -15,6 +23,7 @@ export class UI {
   static showHUD() {
     UI.el('hud-top').style.display = 'flex';
     UI.el('hud-hint').style.display = 'flex';
+    UI.el('game-credit').style.display = 'inline-block';
     // touch devices: show joystick/jump controls, adjust the hint
     const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
     if (isTouch) {
@@ -63,7 +72,7 @@ export class UI {
       row.className = 'room-item';
       row.innerHTML =
         `<span class="room-code">${r.code}</span>` +
-        `<span class="room-map">🗺️ ${r.map || '…'}</span>` +
+        `<span class="room-map">🗺️ ${UI.esc(r.map || '…')}</span>` +
         `<span class="room-count">👥 ${r.count}</span>`;
       row.addEventListener('click', () => onJoin(r.code));
       box.appendChild(row);
@@ -83,7 +92,29 @@ export class UI {
       UI.pop('hud-players');
     } else {
       el.style.display = 'none';
+      UI.playersOpen = false;
+      UI.renderPlayers([]);
     }
+  }
+
+  // live roster panel, toggled by tapping the 👥 pill
+  static playersOpen = false;
+
+  static renderPlayers(list) {
+    const box = UI.el('player-list');
+    if (!UI.playersOpen || !list || list.length === 0) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+    box.style.display = 'block';
+    box.innerHTML = '<div class="rooms-title">👥 In this room</div>' + list.map((p) =>
+      `<div class="player-row">` +
+      `<span class="player-char">${UI.CHAR_EMOJI[p.character] || '🙂'}</span>` +
+      `<span class="player-name">${UI.esc(p.name)}${p.isMe ? ' <em>(you)</em>' : ''}</span>` +
+      `${p.isHost ? '<span title="room host">👑</span>' : ''}` +
+      `<span title="${p.finished ? 'finished!' : 'still hopping'}">${p.finished ? '✅' : '🏃'}</span>` +
+      `</div>`).join('');
   }
 
   static setDeaths(n) {
@@ -122,12 +153,18 @@ export class UI {
   }
 
   // multiplayer: lock NEXT MAP until the whole room has finished
-  static setWinWait(done, total) {
+  static setWinWait(done, total, waitingNames = []) {
     const btn = UI.el('next-btn');
+    const who = UI.el('win-waiting');
     if (total > 1 && done < total) {
       btn.disabled = true;
       btn.textContent = `⏳ WAITING FOR FRIENDS… ${done}/${total}`;
+      who.style.display = 'block';
+      who.textContent = waitingNames.length
+        ? `Still hopping: ${waitingNames.slice(0, 4).join(', ')}${waitingNames.length > 4 ? '…' : ''} 🏃`
+        : '';
     } else {
+      who.style.display = 'none';
       const wasWaiting = btn.disabled;
       btn.disabled = false;
       btn.textContent = 'NEXT MAP ▶';

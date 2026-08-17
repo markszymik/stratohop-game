@@ -210,7 +210,10 @@ document.getElementById('menu-btn').addEventListener('click', () => {
 });
 
 // --- multiplayer event hooks ---
-Net.onRoster = (n) => UI.setPlayers(n);
+Net.onRoster = (n) => {
+  UI.setPlayers(n);
+  UI.renderPlayers(Net.playerList());
+};
 Net.onPeerJoin = (name) => UI.toast(`${name} joined! 👋`, '#9adfff');
 Net.onPeerLeave = (name) => UI.toast(`${name} left`, '#c8d8e8');
 Net.onMapChange = (i) => {
@@ -232,9 +235,17 @@ Player.onCheckpoint = (index) => {
 };
 const refreshWinWait = () => {
   const t = Net.finishTally();
-  UI.setWinWait(t.done, t.total);
+  const waiting = Net.playerList().filter((p) => !p.finished).map((p) => p.name);
+  UI.setWinWait(t.done, t.total, waiting);
+  UI.renderPlayers(Net.playerList()); // keep the roster panel live
 };
 Net.onFinishedChange = refreshWinWait;
+
+// 👥 pill toggles the live player roster
+document.getElementById('hud-players').addEventListener('click', () => {
+  UI.playersOpen = !UI.playersOpen;
+  UI.renderPlayers(Net.playerList());
+});
 
 Player.onWin = () => {
   if (!state.running) return;

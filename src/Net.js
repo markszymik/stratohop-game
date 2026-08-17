@@ -253,6 +253,24 @@ export class Net {
     Net.finished.clear();
   }
 
+  // roster for the HUD player list: me first, then alphabetical
+  static playerList() {
+    const list = [];
+    if (!Net.subscribed || !Net.channel?.members) return list;
+    Net.channel.members.each((m) => {
+      list.push({
+        id: m.id,
+        name: String(m.info?.name || 'Player').slice(0, 16),
+        character: m.info?.character || 'Knight',
+        isMe: m.id === Net.myId,
+        isHost: m.id === Net.hostId,
+        finished: Net.finished.has(m.id),
+      });
+    });
+    list.sort((a, b) => (b.isMe - a.isMe) || a.name.localeCompare(b.name));
+    return list;
+  }
+
   // called every frame from the main loop
   static update(dt) {
     if (!Net.subscribed || !Player.model) return;
