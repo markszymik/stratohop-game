@@ -180,7 +180,8 @@
     background: rgba(255,255,255,0.08); color: #fff; font-family: inherit;
     font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.13s;
   }
-  .room-item:hover { background: rgba(140,220,255,0.22); border-color: #59b7ff; transform: scale(1.02); }
+  .room-item:hover:not(:disabled) { background: rgba(140,220,255,0.22); border-color: #59b7ff; transform: scale(1.02); }
+  .room-item.room-full { opacity: 0.45; cursor: default; }
   .room-item:last-child { margin-bottom: 0; }
   .room-code { letter-spacing: 2px; color: #ffd257; }
   .room-map { flex: 1; text-align: left; opacity: 0.85; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

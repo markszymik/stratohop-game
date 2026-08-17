@@ -7,8 +7,9 @@ import { Ghosts } from './Ghosts.js';
 // client-authoritative ghosts, plus a public-room lobby.
 //
 //  - one presence channel per room: presence-room-<CODE>
-//  - each client broadcasts Player.netState() as 'client-state' at ≤10 Hz
-//    (Pusher's client-event budget), only when it changed (1s keepalive)
+//  - each client broadcasts Player.netState() as 'client-state' at ≤20 Hz,
+//    only when it changed (1s keepalive). Vask client events are
+//    unlimited/free (confirmed by Ashley), so no Pusher-style 10/s budget.
 //  - remote players render as Ghosts (interpolated)
 //  - the host (lowest member id) broadcasts the map; joiners follow
 //  - finishing broadcasts 'client-finish' so everyone sees the time
@@ -19,10 +20,11 @@ import { Ghosts } from './Ghosts.js';
 //
 // Uses window.Pusher from vendor/pusher.min.js (UMD, MIT).
 // ---------------------------------------------------------------------------
-const SEND_INTERVAL = 0.1;   // 10 Hz max
+const SEND_INTERVAL = 0.05;  // 20 Hz max (Vask client events are unlimited/free)
 const KEEPALIVE = 1.0;       // resend unchanged state at least this often
 const ADV_INTERVAL = 5;      // seconds between lobby adverts (host, public room)
 const ADV_TTL = 12000;       // ms before an unrefreshed advert expires
+const MAX_PLAYERS = 8;       // per room — fan-out is quadratic in room size
 
 export class Net {
   static pusher = null;
@@ -49,6 +51,9 @@ export class Net {
   static onPeerFinish = null;  // (name, seconds) => void
   static onRoomsUpdate = null; // ([{code, count, map}]) => void
   static onFinishedChange = null; // () => void — someone finished/joined/left
+  static onRoomFull = null;    // () => void — join refused, room at capacity
+
+  static get maxPlayers() { return MAX_PLAYERS; }
 
   static currentMapIndex = 0;  // main.js keeps these in sync
   static currentMapName = '';
@@ -108,8 +113,8 @@ export class Net {
     if (!Net.onRoomsUpdate) return;
     const list = Object.entries(Net.publicRooms)
       .filter(([code]) => code !== Net.room) // don't list the room we're already in
-      .map(([code, r]) => ({ code, count: r.count, map: r.map }))
-      .sort((a, b) => b.count - a.count || a.code.localeCompare(b.code));
+      .map(([code, r]) => ({ code, count: r.count, map: r.map, full: r.count >= MAX_PLAYERS }))
+      .sort((a, b) => (a.full - b.full) || b.count - a.count || a.code.localeCompare(b.code));
     Net.onRoomsUpdate(list);
   }
 
@@ -134,6 +139,12 @@ export class Net {
     Net.channel = ch;
 
     ch.bind('pusher:subscription_succeeded', (members) => {
+      if (members.count > MAX_PLAYERS) {
+        // we're the overflow member — back out gracefully
+        Net.leaveRoom();
+        Net.onRoomFull && Net.onRoomFull();
+        return;
+      }
       Net.subscribed = true;
       Net.myId = members.me.id;
       members.each((m) => {

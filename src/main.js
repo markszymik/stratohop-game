@@ -227,6 +227,11 @@ Net.onRoster = (n) => {
   UI.setPlayers(n);
   UI.renderPlayers(Net.playerList());
 };
+Net.onRoomFull = () => {
+  UI.setRoom(null);
+  history.replaceState(null, '', location.pathname);
+  UI.toast(`Room is full (${Net.maxPlayers} max) — playing solo ☁️`, '#ffb0c8');
+};
 Net.onPeerJoin = (name) => UI.toast(`${name} joined! 👋`, '#9adfff');
 Net.onPeerLeave = (name) => UI.toast(`${name} left`, '#c8d8e8');
 Net.onMapChange = (i) => {

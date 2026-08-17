@@ -69,12 +69,14 @@ export class UI {
     box.innerHTML = '<div class="rooms-title">🌍 Open rooms — tap to join</div>';
     for (const r of rooms.slice(0, 6)) {
       const row = document.createElement('button');
-      row.className = 'room-item';
+      const full = r.full;
+      row.className = 'room-item' + (full ? ' room-full' : '');
+      row.disabled = full;
       row.innerHTML =
         `<span class="room-code">${r.code}</span>` +
         `<span class="room-map">🗺️ ${UI.esc(r.map || '…')}</span>` +
-        `<span class="room-count">👥 ${r.count}</span>`;
-      row.addEventListener('click', () => onJoin(r.code));
+        `<span class="room-count">${full ? 'FULL' : `👥 ${r.count}`}</span>`;
+      if (!full) row.addEventListener('click', () => onJoin(r.code));
       box.appendChild(row);
     }
   }
