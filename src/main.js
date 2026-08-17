@@ -18,6 +18,7 @@ await loadConfig(); // reads gitignored .env (Vask key etc.); silent if absent
 // ---------------------------------------------------------------------------
 const state = {
   running: false,
+  spectating: false, // finished early, watching friends still racing
   time: 0,
   deaths: 0,
   character: 'Knight',
@@ -181,6 +182,8 @@ function loadMap(index) {
   Net.currentMapName = Maps[index].name;
   if (index !== lastLoadedMap) Net.resetFinishes(); // new map — fresh tally (retry keeps it)
   lastLoadedMap = index;
+  state.spectating = false;
+  UI.hideSpectate();
   if (Net.isHost) Net.sendMap();
   savePrefs();
   const map = Maps[index];
@@ -212,6 +215,8 @@ document.getElementById('next-btn').addEventListener('click', () => {
 });
 document.getElementById('menu-btn').addEventListener('click', () => {
   UI.hideWin();
+  UI.hideSpectate();
+  state.spectating = false;
   state.running = false;
   Net.disconnect();
   UI.setPlayers(0);
@@ -257,6 +262,15 @@ const refreshWinWait = () => {
   UI.setWinWait(t.done, t.total, waiting);
   UI.renderPlayers(Net.playerList()); // keep the roster panel live
   UI.setRoundResults(Net.roundResults()); // live finish order on the win screen
+  if (state.spectating) {
+    UI.setSpectateCount(t.done, t.total);
+    if (Net.allFinished) {
+      // the last friend crossed the line — now show the results
+      state.spectating = false;
+      UI.hideSpectate();
+      UI.showWin(state.time, state.deaths);
+    }
+  }
 };
 Net.onFinishedChange = refreshWinWait;
 
@@ -270,7 +284,14 @@ Player.onWin = () => {
   if (!state.running) return;
   state.running = false;
   Net.sendFinish(state.name, state.time);
-  UI.showWin(state.time, state.deaths);
+  if (Net.connected && !Net.allFinished) {
+    // finished early — keep watching the race instead of a blocking overlay
+    state.spectating = true;
+    UI.showSpectate(state.time);
+    UI.toast('You made it! Watching the others… 👀', '#ffd257');
+  } else {
+    UI.showWin(state.time, state.deaths);
+  }
   refreshWinWait(); // in a room: lock NEXT MAP until everyone finishes
   // global leaderboard: submit and celebrate a top-10 entry
   Scores.submit(state.mapIndex, state.name, state.time).then((res) => {
@@ -301,7 +322,8 @@ function loop() {
 
   Level.update(t, dt);
   Player.update(dt, CameraRig.yaw);
-  CameraRig.update(dt, Player.model ? Player.pos : new THREE.Vector3(0, 1, 0));
+  const specPos = state.spectating ? Ghosts.spectatePos(Net.finished) : null;
+  CameraRig.update(dt, specPos || (Player.model ? Player.pos : new THREE.Vector3(0, 1, 0)));
   World.update(t, dt, Player.model ? Player.pos : null);
 
   if (state.running && Player.model && !Player.won) {

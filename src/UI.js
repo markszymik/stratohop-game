@@ -197,6 +197,20 @@ export class UI {
     box.innerHTML = `<div class="board-title">🏆 Best times · ${UI.esc(mapName)}</div>` + rows;
   }
 
+  // spectate banner: shown after finishing early while friends still race
+  static showSpectate(seconds) {
+    UI.el('spec-time').textContent = `🏁 ${UI.fmtTime(seconds)}`;
+    UI.el('spec-banner').style.display = 'flex';
+  }
+
+  static setSpectateCount(done, total) {
+    UI.el('spec-count').textContent = `watching friends… ${done}/${total} finished`;
+  }
+
+  static hideSpectate() {
+    UI.el('spec-banner').style.display = 'none';
+  }
+
   // multiplayer: lock NEXT MAP until the whole room has finished
   static setWinWait(done, total, waitingNames = []) {
     const btn = UI.el('next-btn');

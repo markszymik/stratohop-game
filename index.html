@@ -149,6 +149,18 @@
     text-shadow: 0 2px 6px rgba(0,0,0,0.4);
   }
 
+  #spec-banner {
+    position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 6;
+    display: flex; align-items: center; gap: 10px; pointer-events: none;
+    padding: 10px 20px; border-radius: 999px; background: rgba(10, 25, 45, 0.78);
+    backdrop-filter: blur(4px); font-family: 'Baloo 2', sans-serif;
+    color: #fff; font-weight: 800; font-size: 16px;
+    animation: banner-in 0.35s ease-out;
+  }
+  #spec-banner #spec-time { color: #ffd257; }
+  #spec-banner #spec-count { color: #9adfff; font-size: 14px; }
+  @keyframes banner-in { from { transform: translate(-50%, -14px); opacity: 0; } }
+
   .board {
     width: 300px; border-radius: 16px; background: rgba(0,0,0,0.22);
     padding: 10px 14px; margin-bottom: 18px; max-height: 150px; overflow-y: auto;
@@ -279,6 +291,10 @@
 <a class="credit" id="game-credit" href="https://x.com/markszymik" target="_blank" rel="noopener"
    style="display:none">by <b>@markszymik</b></a>
 <div class="hud" id="toast"></div>
+<div id="spec-banner" style="display:none">
+  <span id="spec-time">🏁</span>
+  <span id="spec-count">watching friends…</span>
+</div>
 <div class="hud" id="hud-hint" style="display:none">
   <span>WASD move · Space jump · Drag mouse to look · R respawn</span>
 </div>

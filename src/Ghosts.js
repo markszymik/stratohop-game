@@ -103,6 +103,17 @@ export class Ghosts {
     g.current = name;
   }
 
+  // spectate: position of a ghost still racing (prefers unfinished members)
+  static spectatePos(finishedIds) {
+    let fallback = null;
+    for (const g of Ghosts.ghosts.values()) {
+      if (!g.group || !g.group.visible) continue;
+      if (!finishedIds || !finishedIds.has(g.id)) return g.group.position;
+      fallback = g.group.position;
+    }
+    return fallback;
+  }
+
   static update(dt) {
     const renderT = performance.now() / 1000 - RENDER_DELAY;
     for (const g of Ghosts.ghosts.values()) {

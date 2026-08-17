@@ -24,7 +24,7 @@ const SEND_INTERVAL = 0.05;  // 20 Hz max (Vask client events are unlimited/free
 const KEEPALIVE = 1.0;       // resend unchanged state at least this often
 const ADV_INTERVAL = 5;      // seconds between lobby adverts (host, public room)
 const ADV_TTL = 12000;       // ms before an unrefreshed advert expires
-const MAX_PLAYERS = 8;       // per room — fan-out is quadratic in room size
+const MAX_PLAYERS = 12;      // per room — fan-out is quadratic in room size
 
 export class Net {
   static pusher = null;
