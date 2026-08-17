@@ -321,10 +321,13 @@ export class Player {
         // sideways here felt like being thrown off the step. Hoist to just
         // above the top and let the Y pass finish a normal landing (squash,
         // animation, groundPlatform) with forward momentum intact.
+        // (airborne only — walking into a step face still blocks like a wall.
+        //  MUST break after hoisting: cx/cy/cz above are stale once pos.y
+        //  moves, and scanning on ejected players off adjacent stair steps.)
         const lip = (m.y + ph.y) - Player.pos.y;
-        if (Player.vel.y <= 0 && lip > 0 && lip <= Player.STEP_UP) {
+        if (!Player.grounded && Player.vel.y <= 0 && lip > 0 && lip <= Player.STEP_UP) {
           Player.pos.y = m.y + ph.y + 0.02;
-          continue;
+          break;
         }
         const sign = Player.pos[axis] > m[axis] ? 1 : -1;
         const pHalf = axis === 'x' ? ph.x : ph.z;
