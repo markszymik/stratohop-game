@@ -17,7 +17,9 @@ export class Scores {
     try {
       const r = await fetch(`api/scores?map=${mapIndex}`, { cache: 'no-store' });
       if (!r.ok) throw new Error(String(r.status));
-      return (await r.json()).scores;
+      const data = await r.json();
+      if (data.disabled) { Scores.available = false; return null; }
+      return data.scores;
     } catch {
       Scores.available = false;
       return null;
@@ -34,7 +36,8 @@ export class Scores {
         body: JSON.stringify({ map: mapIndex, name, time }),
       });
       if (!r.ok) throw new Error(String(r.status));
-      return await r.json();
+      const data = await r.json();
+      return data.disabled ? null : data;
     } catch {
       return null;
     }

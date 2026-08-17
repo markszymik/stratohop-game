@@ -82,16 +82,21 @@ const shareLink = () =>
 // 💌 invite friends: copy a join link for the room in the field
 if (Net.available) document.getElementById('invite-btn').style.display = '';
 document.getElementById('invite-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('invite-btn');
   let code = roomInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (!code) { code = genCode(); roomInput.value = code; }
   roomTouched = true; // inviting = committing to this room
   const link = `${location.origin}${location.pathname}?room=${encodeURIComponent(code)}`;
   try {
     await navigator.clipboard.writeText(link);
-    UI.toast('Invite link copied — send it to your friends! 💌', '#9adfff');
+    btn.textContent = '✅ LINK COPIED!';
+    UI.toast('Send it to your friends! 💌', '#9adfff');
   } catch {
+    btn.textContent = `📣 ROOM CODE: ${code}`;
     UI.toast(`Share this room code: ${code}`, '#9adfff');
   }
+  clearTimeout(btn._t);
+  btn._t = setTimeout(() => { btn.textContent = '💌 INVITE FRIENDS'; }, 2200);
 });
 
 // live "open rooms" list on the menu (public rooms advertise to the lobby)

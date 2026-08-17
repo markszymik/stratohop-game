@@ -30,7 +30,9 @@ function validMap(m) {
 }
 
 export async function onRequestGet({ request, env }) {
-  if (!env.SCORES) return json({ error: 'leaderboard not configured' }, 503);
+  // soft-disable (200, not 5xx): browsers log every failed request to the
+  // console, and "leaderboard intentionally off" is not an error
+  if (!env.SCORES) return json({ disabled: true, scores: [] });
   const map = parseInt(new URL(request.url).searchParams.get('map'), 10);
   if (!validMap(map)) return json({ error: 'bad map' }, 400);
   const raw = await env.SCORES.get(mapKey(map));
@@ -38,7 +40,7 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!env.SCORES) return json({ error: 'leaderboard not configured' }, 503);
+  if (!env.SCORES) return json({ disabled: true, rank: null, scores: [] });
 
   let body;
   try { body = await request.json(); } catch { return json({ error: 'bad json' }, 400); }
