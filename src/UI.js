@@ -30,8 +30,44 @@ export class UI {
     UI.el('hud-timer').textContent = `⏱️ ${m}:${s}`;
   }
 
-  static setMapName(name) {
-    UI.el('hud-map').textContent = `🗺️ ${name}`;
+  static setMapName(name, index, total) {
+    UI.el('hud-map').textContent = Number.isInteger(index) && total
+      ? `🗺️ ${index + 1}/${total} · ${name}`
+      : `🗺️ ${name}`;
+  }
+
+  // room pill: shows the code while connected; click copies the invite link
+  static setRoom(code) {
+    const el = UI.el('hud-room');
+    if (code) {
+      el.style.display = '';
+      el.textContent = `🔑 ${code}`;
+      UI.pop('hud-room');
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  // menu "open rooms" list — rows are joinable
+  static setRoomList(rooms, onJoin) {
+    const box = UI.el('rooms');
+    if (!rooms || rooms.length === 0) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+    box.style.display = 'block';
+    box.innerHTML = '<div class="rooms-title">🌍 Open rooms — tap to join</div>';
+    for (const r of rooms.slice(0, 6)) {
+      const row = document.createElement('button');
+      row.className = 'room-item';
+      row.innerHTML =
+        `<span class="room-code">${r.code}</span>` +
+        `<span class="room-map">🗺️ ${r.map || '…'}</span>` +
+        `<span class="room-count">👥 ${r.count}</span>`;
+      row.addEventListener('click', () => onJoin(r.code));
+      box.appendChild(row);
+    }
   }
 
   static setCheckpoint(reached, total) {

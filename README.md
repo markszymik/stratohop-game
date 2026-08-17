@@ -105,6 +105,14 @@ Setup:
      `... put VASK_SECRET`
 3. In the menu, type a room code (or hit 🎲) and share it with friends.
 
+Rooms are **public by default**: while you play, the host advertises the room
+(code, player count, current map) to a `presence-lobby` channel, and everyone
+on the start screen sees a live **Open rooms** list they can tap to join.
+Tick **🔒 Private** before playing to stay unlisted — private rooms are still
+joinable by code or link, just never advertised. Every room also has a
+**shareable link** (`?room=CODE`): tap the 🔑 pill in the HUD to copy it, and
+opening it lands a friend on the menu with the room pre-filled.
+
 ### Test multiplayer locally — no Vask account, no deploy
 
 The repo ships a tiny Pusher-protocol mock server for development:

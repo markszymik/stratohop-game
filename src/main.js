@@ -54,9 +54,43 @@ buildMap(state.mapIndex); // pretty backdrop behind the menu
 // --- menu wiring ---
 if (Net.available) document.getElementById('room-row').style.display = 'flex';
 const roomInput = document.getElementById('room-input');
+const privateBox = document.getElementById('room-private');
 document.getElementById('room-gen').addEventListener('click', () => {
   roomInput.value = Array.from({ length: 4 }, () =>
     'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join('');
+});
+
+// shareable link: ?room=CODE prefills the room box
+const urlRoom = (new URLSearchParams(location.search).get('room') || '')
+  .toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+if (urlRoom) roomInput.value = urlRoom;
+
+const shareLink = () =>
+  `${location.origin}${location.pathname}?room=${encodeURIComponent(Net.room || '')}`;
+
+// live "open rooms" list on the menu (public rooms advertise to the lobby)
+if (Net.available) {
+  Net.joinLobby();
+  Net.onRoomsUpdate = (rooms) => {
+    // only show the list while the menu is open
+    const menuOpen = !document.getElementById('menu').classList.contains('hidden');
+    UI.setRoomList(menuOpen ? rooms : [], (code) => {
+      roomInput.value = code;
+      privateBox.checked = false;
+      startGame();
+    });
+  };
+}
+
+// HUD room pill → copy the invite link
+document.getElementById('hud-room').addEventListener('click', async () => {
+  if (!Net.room) return;
+  try {
+    await navigator.clipboard.writeText(shareLink());
+    UI.toast('Invite link copied! 🔗', '#9adfff');
+  } catch {
+    UI.toast(`Room code: ${Net.room}`, '#9adfff');
+  }
 });
 const nameInput = document.getElementById('name-input');
 nameInput.value = state.name === 'Player' ? '' : state.name;
@@ -115,14 +149,23 @@ async function startGame() {
 
   const room = roomInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (room && Net.available && !Net.connected) {
-    Net.connect(room, state.name, state.character);
-    UI.toast(`Room ${room} — invite your friends!`, '#9adfff');
+    Net.connect(room, state.name, state.character, privateBox.checked);
+    UI.setRoom(room);
+    UI.setRoomList([], () => {});
+    history.replaceState(null, '', `${location.pathname}?room=${encodeURIComponent(room)}`);
+    UI.toast(
+      privateBox.checked
+        ? `Private room ${room} — tap 🔑 to copy the invite link`
+        : `Room ${room} — invite your friends!`,
+      '#9adfff',
+    );
   }
 }
 
 function loadMap(index) {
   state.mapIndex = index;
   Net.currentMapIndex = index;
+  Net.currentMapName = Maps[index].name;
   if (Net.isHost) Net.sendMap();
   savePrefs();
   const map = Maps[index];
@@ -132,7 +175,7 @@ function loadMap(index) {
   Player.spawnPoint.set(map.spawn[0], map.spawn[1], map.spawn[2]);
   Player.respawn(true);
   CameraRig.yaw = 0;
-  UI.setMapName(map.name);
+  UI.setMapName(map.name, index, Maps.length);
   UI.setCheckpoint(0, Level.checkpoints.length);
   state.running = true;
   state.time = 0;
@@ -155,7 +198,10 @@ document.getElementById('menu-btn').addEventListener('click', () => {
   state.running = false;
   Net.disconnect();
   UI.setPlayers(0);
+  UI.setRoom(null);
+  history.replaceState(null, '', location.pathname);
   document.getElementById('menu').classList.remove('hidden');
+  Net.emitRooms(); // repopulate the open-rooms list right away
 });
 
 // --- multiplayer event hooks ---
@@ -197,7 +243,7 @@ Player.die = () => {
 };
 
 // debug handle (also handy in devtools: __game.Player.JUMP = 11)
-window.__game = { Player, Level, World, CameraRig, Maps, state };
+window.__game = { Player, Level, World, CameraRig, Maps, state, Net, UI };
 
 // --- main loop ---
 const clock = new THREE.Clock();

@@ -122,6 +122,31 @@
   }
   #room-gen:hover { transform: rotate(30deg) scale(1.1); border-color: #59b7ff; }
   #hud-players { background: linear-gradient(180deg, #b48fff, #8a5fe0); }
+  #hud-room { background: linear-gradient(180deg, #4fd8c3, #1fae9a); cursor: pointer; }
+  #hud-room:hover { transform: scale(1.07); }
+
+  #private-label {
+    display: flex; align-items: center; gap: 6px; cursor: pointer;
+    color: #fff; font-weight: 800; font-size: 14px; user-select: none; white-space: nowrap;
+  }
+  #private-label input { width: 17px; height: 17px; accent-color: #ffb347; cursor: pointer; }
+
+  #rooms {
+    width: 340px; max-height: 148px; overflow-y: auto; margin: -8px 0 20px;
+    border-radius: 16px; background: rgba(0,0,0,0.18); padding: 8px;
+  }
+  .rooms-title { color: #9adfff; font-weight: 800; font-size: 13px; margin: 2px 4px 7px; }
+  .room-item {
+    display: flex; width: 100%; align-items: center; gap: 10px; margin-bottom: 6px;
+    padding: 8px 12px; border-radius: 12px; border: 2px solid rgba(140,220,255,0.3);
+    background: rgba(255,255,255,0.08); color: #fff; font-family: inherit;
+    font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.13s;
+  }
+  .room-item:hover { background: rgba(140,220,255,0.22); border-color: #59b7ff; transform: scale(1.02); }
+  .room-item:last-child { margin-bottom: 0; }
+  .room-code { letter-spacing: 2px; color: #ffd257; }
+  .room-map { flex: 1; text-align: left; opacity: 0.85; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .room-count { color: #9adfff; }
   .chars { display: flex; gap: 14px; margin-bottom: 20px; }
   .char-btn {
     width: 116px; padding: 14px 8px; border-radius: 18px; cursor: pointer; text-align: center;
@@ -196,6 +221,7 @@
   <div class="pill" id="hud-checkpoint">🚩 0/0</div>
   <div class="pill" id="hud-deaths">😵 0</div>
   <div class="pill" id="hud-players" style="display:none">👥 1</div>
+  <div class="pill" id="hud-room" style="display:none" title="Tap to copy the invite link">🔑</div>
 </div>
 <div class="hud" id="toast"></div>
 <div class="hud" id="hud-hint" style="display:none">
@@ -209,7 +235,11 @@
   <div id="room-row" style="display:none">
     <input id="room-input" maxlength="6" placeholder="Room code" autocomplete="off" spellcheck="false" />
     <button id="room-gen" title="New room code">🎲</button>
+    <label id="private-label" title="Private rooms don't show in the open list — share the code or link">
+      <input type="checkbox" id="room-private" /> 🔒 Private
+    </label>
   </div>
+  <div id="rooms" style="display:none"></div>
   <div class="chars" id="chars">
     <div class="char-btn selected" data-char="Knight"><span class="emoji">🛡️</span>Knight</div>
     <div class="char-btn" data-char="Barbarian"><span class="emoji">🪓</span>Barbarian</div>

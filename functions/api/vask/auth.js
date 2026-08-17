@@ -32,8 +32,8 @@ export async function onRequestPost({ request, env }) {
   const socketId = form.get('socket_id') || '';
   const channel = form.get('channel_name') || '';
 
-  // only sign our own room channels, nothing else
-  if (!/^\d+\.\d+$/.test(socketId) || !/^presence-room-[A-Z0-9]{3,8}$/.test(channel)) {
+  // only sign our own channels, nothing else: room channels + the public lobby
+  if (!/^\d+\.\d+$/.test(socketId) || !/^presence-(room-[A-Z0-9]{3,8}|lobby)$/.test(channel)) {
     return new Response('forbidden', { status: 403 });
   }
 
