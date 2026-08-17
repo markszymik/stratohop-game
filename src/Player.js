@@ -161,9 +161,11 @@ export class Player {
       const len = Math.hypot(ix, iz);
       ix /= len; iz /= len;
       const speed = Player.SPEED * (tMag > 0.12 ? Math.min(tMag, 1) : 1);
+      // rotate camera-space input into world space (R_y(yaw)):
+      // camera right = (cos, 0, -sin), camera forward = (-sin, 0, -cos)
       const sin = Math.sin(cameraYaw), cos = Math.cos(cameraYaw);
-      wishX = (ix * cos - iz * sin) * speed;
-      wishZ = (ix * sin + iz * cos) * speed;
+      wishX = (ix * cos + iz * sin) * speed;
+      wishZ = (-ix * sin + iz * cos) * speed;
     }
     // snappy accel / decel; extra air control around the jump apex
     const atApex = !Player.grounded && Math.abs(Player.vel.y) < Player.APEX_WINDOW;
