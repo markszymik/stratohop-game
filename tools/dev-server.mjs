@@ -15,6 +15,14 @@ import { readFile } from 'node:fs/promises';
 import { join, extname, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onRequestPost } from '../functions/api/vask/auth.js';
+import * as scoresFn from '../functions/api/scores.js';
+
+// in-memory stand-in for the SCORES KV namespace (leaderboard testing)
+const memKV = new Map();
+const SCORES = {
+  get: async (k) => memKV.get(k) ?? null,
+  put: async (k, v) => { memKV.set(k, v); },
+};
 
 const root = join(fileURLToPath(import.meta.url), '..', '..');
 const args = process.argv.slice(2);
@@ -59,6 +67,23 @@ createServer(async (req, res) => {
         headers: { 'content-type': req.headers['content-type'] || 'application/x-www-form-urlencoded' },
       });
       const out = await onRequestPost({ request, env });
+      res.writeHead(out.status, Object.fromEntries(out.headers));
+      res.end(Buffer.from(await out.arrayBuffer()));
+      return;
+    }
+
+    if (url.pathname === '/api/scores') {
+      const body = req.method === 'POST' ? await new Promise((resolve) => {
+        const chunks = [];
+        req.on('data', (c) => chunks.push(c));
+        req.on('end', () => resolve(Buffer.concat(chunks)));
+      }) : undefined;
+      const request = new Request(`http://localhost${req.url}`, {
+        method: req.method, body,
+        headers: { 'content-type': req.headers['content-type'] || 'application/json' },
+      });
+      const handler = req.method === 'POST' ? scoresFn.onRequestPost : scoresFn.onRequestGet;
+      const out = await handler({ request, env: { ...env, SCORES } });
       res.writeHead(out.status, Object.fromEntries(out.headers));
       res.end(Buffer.from(await out.arrayBuffer()));
       return;

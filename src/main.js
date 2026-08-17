@@ -9,6 +9,7 @@ import { Maps } from './maps/Maps.js';
 import { loadConfig } from './config.js';
 import { Net } from './Net.js';
 import { Ghosts } from './Ghosts.js';
+import { Scores } from './Scores.js';
 
 await loadConfig(); // reads gitignored .env (Vask key etc.); silent if absent
 
@@ -118,9 +119,20 @@ Maps.forEach((map, i) => {
     btn.classList.add('selected');
     state.mapIndex = i;
     buildMap(i); // preview behind the menu
+    refreshBestTimes(i);
   });
   mapsEl.appendChild(btn);
 });
+
+// global leaderboard panel (hidden automatically if /api/scores is absent)
+let bestTimesReq = 0;
+async function refreshBestTimes(i) {
+  const req = ++bestTimesReq;
+  const scores = await Scores.top(i);
+  if (req !== bestTimesReq) return; // a newer request superseded this one
+  UI.setBestTimes(Maps[i].name, scores);
+}
+refreshBestTimes(state.mapIndex);
 
 async function startGame() {
   state.name = (nameInput.value.trim() || 'Player').slice(0, 16);
@@ -207,6 +219,7 @@ document.getElementById('menu-btn').addEventListener('click', () => {
   history.replaceState(null, '', location.pathname);
   document.getElementById('menu').classList.remove('hidden');
   Net.emitRooms(); // repopulate the open-rooms list right away
+  refreshBestTimes(state.mapIndex); // pick up any new records
 });
 
 // --- multiplayer event hooks ---
@@ -238,6 +251,7 @@ const refreshWinWait = () => {
   const waiting = Net.playerList().filter((p) => !p.finished).map((p) => p.name);
   UI.setWinWait(t.done, t.total, waiting);
   UI.renderPlayers(Net.playerList()); // keep the roster panel live
+  UI.setRoundResults(Net.roundResults()); // live finish order on the win screen
 };
 Net.onFinishedChange = refreshWinWait;
 
@@ -253,6 +267,10 @@ Player.onWin = () => {
   Net.sendFinish(state.name, state.time);
   UI.showWin(state.time, state.deaths);
   refreshWinWait(); // in a room: lock NEXT MAP until everyone finishes
+  // global leaderboard: submit and celebrate a top-10 entry
+  Scores.submit(state.mapIndex, state.name, state.time).then((res) => {
+    if (res?.rank) UI.toast(`🌍 World top 10 — #${res.rank}!`, '#ffd257');
+  });
 };
 
 const origDie = Player.die.bind(Player);

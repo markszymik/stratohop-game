@@ -38,6 +38,7 @@ export class Net {
   static lastSentAt = 0;
   static publicRooms = {};    // code -> {count, map, at}
   static finished = new Set(); // member ids that finished the current map
+  static results = new Map();  // member id -> {name, time} for the round board
   static authParams = { name: 'Player', character: 'Knight' }; // mutated before join
 
   // hooks main.js fills in
@@ -181,7 +182,13 @@ export class Net {
     });
 
     ch.bind('client-finish', (data, metadata) => {
-      if (metadata?.user_id) Net.finished.add(metadata.user_id);
+      if (metadata?.user_id) {
+        Net.finished.add(metadata.user_id);
+        Net.results.set(metadata.user_id, {
+          name: String(data?.name || 'Player').slice(0, 16),
+          time: +data?.time || 0,
+        });
+      }
       Net.onPeerFinish && Net.onPeerFinish(data?.name || 'Player', +data?.time || 0);
       Net.onFinishedChange && Net.onFinishedChange();
     });
@@ -229,8 +236,14 @@ export class Net {
   static sendFinish(name, time) {
     if (!Net.subscribed) return;
     Net.finished.add(Net.myId);
+    Net.results.set(Net.myId, { name, time: +time.toFixed(1) });
     Net.channel.trigger('client-finish', { name, time: +time.toFixed(1) });
     Net.onFinishedChange && Net.onFinishedChange();
+  }
+
+  // this round's finish order (fastest first) — leavers keep their entry
+  static roundResults() {
+    return [...Net.results.values()].sort((a, b) => a.time - b.time);
   }
 
   // {done, total} finish tally for the current map (solo → trivially complete)
@@ -251,6 +264,7 @@ export class Net {
 
   static resetFinishes() {
     Net.finished.clear();
+    Net.results.clear();
   }
 
   // roster for the HUD player list: me first, then alphabetical

@@ -1,6 +1,16 @@
 # Cloudflare Pages config — deploy with:  npx wrangler pages deploy
 # (or connect the repo in the Cloudflare dashboard: no build command,
-#  build command "npm run deploy-build", output directory "dist")
+#  output directory "/")
 name = "stratohop"
 compatibility_date = "2026-08-16"
 pages_build_output_dir = "dist"
+
+# --- OPTIONAL: global leaderboard ---
+# The game works fine without this — the leaderboard UI just stays hidden.
+# To enable (KV has a free tier: 100k reads / 1k writes per day):
+#   npx wrangler kv namespace create SCORES
+# then uncomment and paste the id it prints:
+#
+# [[kv_namespaces]]
+# binding = "SCORES"
+# id = "PASTE_ID_HERE"

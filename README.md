@@ -113,6 +113,21 @@ joinable by code or link, just never advertised. Every room also has a
 **shareable link** (`?room=CODE`): tap the 🔑 pill in the HUD to copy it, and
 opening it lands a friend on the menu with the room pre-filled.
 
+## Leaderboards
+
+Two layers, both automatic:
+
+- **Round results** — the win screen shows the room's finish order with
+  medals. Pure client-side over Vask; works everywhere, no setup.
+- **Global best times** (optional) — top 10 per map, stored in Workers KV
+  via `functions/api/scores.js`, shown on the start screen for the selected
+  map. Entirely opt-in: without the KV binding the endpoint answers 503 and
+  the game hides the panel. To enable it (KV's free tier is plenty):
+  `npx wrangler kv namespace create SCORES`, paste the id into the
+  commented `[[kv_namespaces]]` block in `wrangler.toml`, redeploy.
+  One entry per name per map (a player's best); times are client-reported,
+  so treat it as a fun board, not an anti-cheat one.
+
 ### Test multiplayer locally — no Vask account, no deploy
 
 The repo ships a tiny Pusher-protocol mock server for development:

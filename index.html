@@ -145,6 +145,20 @@
     text-shadow: 0 2px 6px rgba(0,0,0,0.4);
   }
 
+  .board {
+    width: 300px; border-radius: 16px; background: rgba(0,0,0,0.22);
+    padding: 10px 14px; margin-bottom: 18px; max-height: 150px; overflow-y: auto;
+  }
+  .board-title { color: #ffd257; font-weight: 800; font-size: 14px; margin-bottom: 6px; }
+  .board-row {
+    display: flex; align-items: center; gap: 8px; padding: 3px 2px;
+    color: #fff; font-weight: 800; font-size: 14px;
+  }
+  .board-rank { width: 26px; text-align: center; }
+  .board-name { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .board-time { color: #9adfff; font-variant-numeric: tabular-nums; }
+  .board-empty { color: rgba(255,255,255,0.6); font-weight: 700; font-size: 13px; padding: 2px; }
+
   #private-label {
     display: flex; align-items: center; gap: 6px; cursor: pointer;
     color: #fff; font-weight: 800; font-size: 14px; user-select: none; white-space: nowrap;
@@ -283,6 +297,7 @@
     <div class="char-btn" data-char="Rogue"><span class="emoji">🗡️</span>Rogue</div>
   </div>
   <div class="maps" id="maps"></div>
+  <div id="best-times" class="board" style="display:none"></div>
   <button class="big-btn" id="play-btn">PLAY!</button>
   <div class="controls-box">
     <kbd>W A S D</kbd> move &nbsp; <kbd>Space</kbd> jump &nbsp; <kbd>Mouse</kbd> camera<br/>
@@ -300,6 +315,7 @@
   <div id="confetti"></div>
   <h1>YOU MADE IT! 🎉</h1>
   <div id="win-stats" class="stats-card"></div>
+  <div id="win-results" class="board" style="display:none"></div>
   <button class="big-btn mega" id="next-btn">NEXT MAP ▶</button>
   <div id="win-waiting" style="display:none"></div>
   <div class="win-row">

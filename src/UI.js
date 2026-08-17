@@ -152,6 +152,49 @@ export class UI {
     UI.el('confetti').innerHTML = '';
   }
 
+  static fmtTime(t) {
+    const m = Math.floor(t / 60);
+    return `${m}:${(t % 60).toFixed(1).padStart(4, '0')}`;
+  }
+
+  // win screen: this round's finish order (only interesting with 2+ finishers)
+  static setRoundResults(list) {
+    const box = UI.el('win-results');
+    if (!list || list.length < 2) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+    const medals = ['🥇', '🥈', '🥉'];
+    box.style.display = 'block';
+    box.innerHTML = '<div class="board-title">🏁 This round</div>' + list.slice(0, 8).map((r, i) =>
+      `<div class="board-row">` +
+      `<span class="board-rank">${medals[i] || `${i + 1}.`}</span>` +
+      `<span class="board-name">${UI.esc(r.name)}</span>` +
+      `<span class="board-time">${UI.fmtTime(r.time)}</span>` +
+      `</div>`).join('');
+  }
+
+  // menu: global best times for the selected map (null → endpoint unavailable)
+  static setBestTimes(mapName, scores) {
+    const box = UI.el('best-times');
+    if (scores === null) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+    box.style.display = 'block';
+    const rows = scores.length === 0
+      ? '<div class="board-empty">No times yet — be the first! 🚀</div>'
+      : scores.slice(0, 5).map((s, i) =>
+        `<div class="board-row">` +
+        `<span class="board-rank">${['🥇', '🥈', '🥉'][i] || `${i + 1}.`}</span>` +
+        `<span class="board-name">${UI.esc(s.n)}</span>` +
+        `<span class="board-time">${UI.fmtTime(s.t)}</span>` +
+        `</div>`).join('');
+    box.innerHTML = `<div class="board-title">🏆 Best times · ${UI.esc(mapName)}</div>` + rows;
+  }
+
   // multiplayer: lock NEXT MAP until the whole room has finished
   static setWinWait(done, total, waitingNames = []) {
     const btn = UI.el('next-btn');
