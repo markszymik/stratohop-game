@@ -1,0 +1,26 @@
+# OS noise
+.DS_Store
+Thumbs.db
+
+# editors
+.vscode/
+.idea/
+
+# local scratch
+node_modules/
+*.log
+
+# optional drop-in assets you may not want in the repo (see README)
+# assets/dragons/Dragon.glb
+
+# environment config (see .env.example)
+.env
+
+# local worker secrets (see .dev.vars.example)
+.dev.vars
+
+# private planning notes — not part of the public repo
+PLAN.md
+
+# workspace-VM delete workaround
+_to_delete/

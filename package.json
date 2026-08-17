@@ -1,0 +1,13 @@
+{
+  "name": "stratohop",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npx serve .",
+    "validate": "node tools/validate-maps.mjs",
+    "dev": "node tools/dev-server.mjs --mock"
+  },
+  "devDependencies": {
+    "ws": "^8.18.0"
+  }
+}

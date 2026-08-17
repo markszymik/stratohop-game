@@ -1,0 +1,6 @@
+# Cloudflare Pages config — deploy with:  npx wrangler pages deploy
+# (or connect the repo in the Cloudflare dashboard: no build command,
+#  output directory "/")
+name = "stratohop"
+compatibility_date = "2026-08-16"
+pages_build_output_dir = "."

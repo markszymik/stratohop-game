@@ -1,0 +1,225 @@
+import * as THREE from 'three';
+import { World } from './World.js';
+import { Level } from './Level.js';
+import { Player } from './Player.js';
+import { CameraRig } from './CameraRig.js';
+import { Input } from './Input.js';
+import { UI } from './UI.js';
+import { Maps } from './maps/Maps.js';
+import { loadConfig } from './config.js';
+import { Net } from './Net.js';
+import { Ghosts } from './Ghosts.js';
+
+await loadConfig(); // reads gitignored .env (Vask key etc.); silent if absent
+
+// ---------------------------------------------------------------------------
+// Boot + game loop + round state.
+// ---------------------------------------------------------------------------
+const state = {
+  running: false,
+  time: 0,
+  deaths: 0,
+  character: 'Knight',
+  mapIndex: 0,
+  name: 'Player',
+};
+
+// restore prefs (this runs from the player's own server, storage is fine here)
+try {
+  const saved = JSON.parse(localStorage.getItem('stratohop-prefs') || '{}');
+  if (saved.character) state.character = saved.character;
+  if (saved.name) state.name = saved.name;
+  if (Number.isInteger(saved.mapIndex) && Maps[saved.mapIndex]) state.mapIndex = saved.mapIndex;
+} catch { /* first visit */ }
+
+const savePrefs = () => {
+  try {
+    localStorage.setItem('stratohop-prefs', JSON.stringify({
+      character: state.character, name: state.name, mapIndex: state.mapIndex,
+    }));
+  } catch { /* private mode etc. */ }
+};
+
+World.init(document.getElementById('app'));
+Ghosts.init(World.scene);
+
+function buildMap(i) {
+  Level.build(World.scene, Maps[i]);
+  World.applyTheme(Maps[i].theme);
+}
+CameraRig.init(World.camera);
+Input.init(World.renderer.domElement);
+buildMap(state.mapIndex); // pretty backdrop behind the menu
+
+// --- menu wiring ---
+if (Net.available) document.getElementById('room-row').style.display = 'flex';
+const roomInput = document.getElementById('room-input');
+document.getElementById('room-gen').addEventListener('click', () => {
+  roomInput.value = Array.from({ length: 4 }, () =>
+    'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join('');
+});
+const nameInput = document.getElementById('name-input');
+nameInput.value = state.name === 'Player' ? '' : state.name;
+
+document.querySelectorAll('.char-btn').forEach((btn) => {
+  if (btn.dataset.char === state.character) {
+    document.querySelectorAll('.char-btn').forEach((b) => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.char-btn').forEach((b) => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.character = btn.dataset.char;
+  });
+});
+
+// map grid
+const mapsEl = document.getElementById('maps');
+Maps.forEach((map, i) => {
+  const btn = document.createElement('div');
+  btn.className = 'map-btn' + (i === state.mapIndex ? ' selected' : '');
+  btn.innerHTML = `${map.name}<span class="stars">${'★'.repeat(map.stars)}${'☆'.repeat(5 - map.stars)}</span>`;
+  btn.addEventListener('click', () => {
+    mapsEl.querySelectorAll('.map-btn').forEach((b) => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.mapIndex = i;
+    buildMap(i); // preview behind the menu
+  });
+  mapsEl.appendChild(btn);
+});
+
+async function startGame() {
+  state.name = (nameInput.value.trim() || 'Player').slice(0, 16);
+  savePrefs();
+
+  const btn = document.getElementById('play-btn');
+  btn.disabled = true;
+  btn.textContent = 'LOADING…';
+  try {
+    if (Player.character !== state.character || !Player.model) {
+      await Player.load(World.scene, state.character);
+    }
+  } catch (err) {
+    btn.textContent = 'FAILED TO LOAD — see console';
+    console.error(err);
+    return;
+  }
+  btn.disabled = false;
+  btn.textContent = 'PLAY!';
+  try { await document.fonts.load('700 42px "Baloo 2"'); } catch { /* fallback font is fine */ }
+  Player.setName(World.scene, state.name);
+
+  loadMap(state.mapIndex);
+  UI.hideMenu();
+  UI.showHUD();
+
+  const room = roomInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (room && Net.available && !Net.connected) {
+    Net.connect(room, state.name, state.character);
+    UI.toast(`Room ${room} — invite your friends!`, '#9adfff');
+  }
+}
+
+function loadMap(index) {
+  state.mapIndex = index;
+  Net.currentMapIndex = index;
+  if (Net.isHost) Net.sendMap();
+  savePrefs();
+  const map = Maps[index];
+  buildMap(index);
+  Level.reset();
+  Player.won = false;
+  Player.spawnPoint.set(map.spawn[0], map.spawn[1], map.spawn[2]);
+  Player.respawn(true);
+  CameraRig.yaw = 0;
+  UI.setMapName(map.name);
+  UI.setCheckpoint(0, Level.checkpoints.length);
+  state.running = true;
+  state.time = 0;
+  state.deaths = 0;
+  UI.setDeaths(0);
+  UI.setTimer(0);
+}
+
+document.getElementById('play-btn').addEventListener('click', startGame);
+document.getElementById('again-btn').addEventListener('click', () => {
+  UI.hideWin();
+  loadMap(state.mapIndex);
+});
+document.getElementById('next-btn').addEventListener('click', () => {
+  UI.hideWin();
+  loadMap((state.mapIndex + 1) % Maps.length);
+});
+document.getElementById('menu-btn').addEventListener('click', () => {
+  UI.hideWin();
+  state.running = false;
+  Net.disconnect();
+  UI.setPlayers(0);
+  document.getElementById('menu').classList.remove('hidden');
+});
+
+// --- multiplayer event hooks ---
+Net.onRoster = (n) => UI.setPlayers(n);
+Net.onPeerJoin = (name) => UI.toast(`${name} joined! 👋`, '#9adfff');
+Net.onPeerLeave = (name) => UI.toast(`${name} left`, '#c8d8e8');
+Net.onMapChange = (i) => {
+  if (i !== state.mapIndex && Maps[i]) {
+    UI.toast('Off to the next map! 🗺️', '#ffd257');
+    loadMap(i);
+  }
+};
+Net.onPeerFinish = (name, time) => {
+  const mm = Math.floor(time / 60), ss = (time % 60).toFixed(1).padStart(4, '0');
+  UI.toast(`🏁 ${name} finished in ${mm}:${ss}!`, '#ffd257');
+};
+
+// --- player event hooks ---
+Player.onCheckpoint = (index) => {
+  UI.setCheckpoint(index, Level.checkpoints.length);
+  UI.toast('Checkpoint! ⭐');
+};
+Player.onWin = () => {
+  if (!state.running) return;
+  state.running = false;
+  Net.sendFinish(state.name, state.time);
+  UI.showWin(state.time, state.deaths);
+};
+
+const origDie = Player.die.bind(Player);
+Player.die = () => {
+  const wasAlive = !Player.dead && !Player.won;
+  origDie();
+  if (wasAlive && state.running) {
+    state.deaths += 1;
+    UI.setDeaths(state.deaths);
+    UI.toast('Oops! Back to the flag! ☁️', '#ffb0c8');
+  }
+};
+
+// debug handle (also handy in devtools: __game.Player.JUMP = 11)
+window.__game = { Player, Level, World, CameraRig, Maps, state };
+
+// --- main loop ---
+const clock = new THREE.Clock();
+function loop() {
+  requestAnimationFrame(loop);
+  const dt = Math.min(clock.getDelta(), 0.05); // clamp to avoid tunneling on tab-switch
+  const t = clock.elapsedTime;
+
+  Level.update(t, dt);
+  Player.update(dt, CameraRig.yaw);
+  CameraRig.update(dt, Player.model ? Player.pos : new THREE.Vector3(0, 1, 0));
+  World.update(t, dt, Player.model ? Player.pos : null);
+
+  if (state.running && Player.model && !Player.won) {
+    state.time += dt;
+    UI.setTimer(state.time);
+  }
+
+  Net.update(dt);
+  Ghosts.update(dt);
+
+  Input.endFrame();
+  World.renderer.render(World.scene, World.camera);
+}
+loop();

@@ -1,0 +1,7 @@
+# Copy to `.dev.vars` (gitignored) for local multiplayer dev with
+# `npx wrangler pages dev .` — these feed the Pages Function auth signer.
+# In production set them with:
+#   npx wrangler pages secret put VASK_KEY
+#   npx wrangler pages secret put VASK_SECRET
+VASK_KEY=
+VASK_SECRET=
