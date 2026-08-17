@@ -1,4 +1,8 @@
 // ---------------------------------------------------------------------------
+// NOT CURRENTLY USED — kept for the day cloudarcade.app's root becomes a
+// separate project. Today the domain is bound directly to the stratohop
+// Pages project and the game lives in a real dist/stratohop/ subfolder.
+//
 // Mount Stratohop under a path on cloudarcade.app:
 //   https://cloudarcade.app/stratohop/  →  https://stratohop.pages.dev/
 //

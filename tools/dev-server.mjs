@@ -14,8 +14,8 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { join, extname, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { onRequestPost } from '../functions/api/vask/auth.js';
-import * as scoresFn from '../functions/api/scores.js';
+import { onRequestPost } from '../functions/stratohop/api/vask/auth.js';
+import * as scoresFn from '../functions/stratohop/api/scores.js';
 
 // in-memory stand-in for the SCORES KV namespace (leaderboard testing)
 const memKV = new Map();
@@ -60,6 +60,11 @@ const PREFIX = '/stratohop';
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
+    if (url.pathname === '/') { // mirror production: root redirects to the game
+      res.writeHead(302, { Location: PREFIX + '/' + url.search });
+      res.end();
+      return;
+    }
     if (url.pathname === PREFIX) { // no trailing slash → relative URLs break
       res.writeHead(301, { Location: PREFIX + '/' + url.search });
       res.end();

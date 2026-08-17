@@ -112,7 +112,7 @@ Setup:
 1. Put the Vask **App Key** in `.env` (`VASK_KEY=...`, see `.env.example`) —
    this is the public key, safe in any client.
 2. The presence-auth signer is a Cloudflare Pages Function
-   (`functions/api/vask/auth.js`). Give it the key + **secret**:
+   (`functions/stratohop/api/vask/auth.js`). Give it the key + **secret**:
    - local: copy `.dev.vars.example` → `.dev.vars`, then run `npm start`
      (plain static servers can't run the auth function, so multiplayer
      needs the dev server — or `npm run dev` for the no-account mock)
@@ -135,7 +135,7 @@ Two layers, both automatic:
 - **Round results** — the win screen shows the room's finish order with
   medals. Pure client-side over Vask; works everywhere, no setup.
 - **Global best times** (optional) — top 10 per map, stored in Workers KV
-  via `functions/api/scores.js`, shown on the start screen for the selected
+  via `functions/stratohop/api/scores.js`, shown on the start screen for the selected
   map. Entirely opt-in: without the KV binding the endpoint answers 503 and
   the game hides the panel. To enable it (KV's free tier is plenty):
   `npx wrangler kv namespace create SCORES`, paste the id into the
@@ -173,15 +173,23 @@ Or connect the repo in the Cloudflare dashboard with build command
 `node tools/build-dist.mjs` and output directory **`dist`**. The
 leaderboard KV binding is optional — see the comment in `wrangler.toml`.
 
-### Host under a path on your own domain
+### cloudarcade.app/stratohop — a real subfolder
 
-Pages only binds whole (sub)domains, but the game is fully path-agnostic
-(every client URL is relative), so mounting it at
-[cloudarcade.app/stratohop](https://cloudarcade.app/stratohop/) just needs
-the tiny proxy Worker in `tools/path-proxy-worker.js` — setup steps are in
-that file's header. The dev server mirrors this:
-http://localhost:8788/stratohop/ works too, so the subpath mount stays
-testable locally.
+The build nests the game in an actual folder — `dist/stratohop/` — and the
+Pages Functions live at `functions/stratohop/api/*` to match. Bind
+`cloudarcade.app` directly to this Pages project (dashboard → the project →
+Custom domains) and [cloudarcade.app/stratohop/](https://cloudarcade.app/stratohop/)
+just works: no proxy, no Worker. The domain root 302-redirects to the game
+for now (`dist/_redirects`).
+
+The game is fully path-agnostic (every client URL is relative), so it also
+still works at the deployment root. The dev server mirrors the mount:
+http://localhost:8788/stratohop/ (and `/` redirects there, like production).
+
+When a real arcade landing page takes over the cloudarcade.app root, either
+build it into this project's `dist/` root, or split it into its own project
+and switch to the proxy Worker kept in `tools/path-proxy-worker.js` —
+that's the tool for one hostname fronting several independent projects.
 
 ## Optional: premium dragon model
 
