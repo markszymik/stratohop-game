@@ -1,0 +1,18 @@
+# Files wrangler pages deploy must NOT upload as public static assets.
+# (wrangler ignores .git and node_modules automatically, but NOT .gitignore)
+
+# secrets — the auth signer gets these via `wrangler pages secret put`, never as files
+.dev.vars
+.dev.vars.example
+
+# private planning notes
+PLAN.md
+
+# local workspace debris
+_to_delete
+.wrangler
+*.log
+
+# NOTE: .env IS deliberately uploaded — it only ever contains the PUBLIC
+# Vask app key + websocket host (never the secret), and the client reads it
+# at runtime for multiplayer config.
