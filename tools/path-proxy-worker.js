@@ -1,20 +1,23 @@
 // ---------------------------------------------------------------------------
-// Mount Stratohop under a path on your own domain:
-//   https://yourdomain.com/game/stratohop/  →  https://stratohop.pages.dev/
+// Mount Stratohop under a path on cloudarcade.app:
+//   https://cloudarcade.app/stratohop/  →  https://stratohop.pages.dev/
+//
+// One worker per game as the arcade grows (copy this file, change the two
+// constants), or evolve it into a PREFIX→project map later.
 //
 // Cloudflare Pages can only bind whole (sub)domains, so a path mount needs
 // this tiny Worker on YOUR zone. Setup (Cloudflare dashboard):
 //   1. Workers & Pages → Create → Worker → paste this file → Deploy
 //   2. On the worker: Settings → Domains & Routes → Add route:
-//        route:  yourdomain.com/game/stratohop*
-//        zone:   yourdomain.com
+//        route:  cloudarcade.app/stratohop*
+//        zone:   cloudarcade.app
 // That's it. The game is path-agnostic (all client URLs are relative), the
 // Worker strips the prefix before hitting Pages, and Pages Functions
 // (/api/vask/auth, /api/scores) keep working through the proxy.
 //
 // Bonus of serving from your own zone: Caching → Purge Cache works.
 // ---------------------------------------------------------------------------
-const PREFIX = '/game/stratohop';
+const PREFIX = '/stratohop';
 const UPSTREAM = 'https://stratohop.pages.dev';
 
 export default {

@@ -53,9 +53,9 @@ const MIME = {
 };
 
 // The game must work mounted under a subpath (production: a Worker proxies
-// yourdomain.com/game/stratohop/* → the Pages deployment). Mirror that here
-// so it's testable: http://localhost:8788/game/stratohop/
-const PREFIX = '/game/stratohop';
+// cloudarcade.app/stratohop/* → the Pages deployment). Mirror that here
+// so it's testable: http://localhost:8788/stratohop/
+const PREFIX = '/stratohop';
 
 createServer(async (req, res) => {
   try {

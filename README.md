@@ -176,11 +176,12 @@ leaderboard KV binding is optional — see the comment in `wrangler.toml`.
 ### Host under a path on your own domain
 
 Pages only binds whole (sub)domains, but the game is fully path-agnostic
-(every client URL is relative), so mounting it at e.g.
-`yourdomain.com/game/stratohop/` just needs the tiny proxy Worker in
-`tools/path-proxy-worker.js` — setup steps are in that file's header.
-The dev server mirrors this: http://localhost:8788/game/stratohop/ works
-too, so the subpath mount stays testable locally.
+(every client URL is relative), so mounting it at
+[cloudarcade.app/stratohop](https://cloudarcade.app/stratohop/) just needs
+the tiny proxy Worker in `tools/path-proxy-worker.js` — setup steps are in
+that file's header. The dev server mirrors this:
+http://localhost:8788/stratohop/ works too, so the subpath mount stays
+testable locally.
 
 ## Optional: premium dragon model
 
