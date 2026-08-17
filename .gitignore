@@ -24,3 +24,6 @@ PLAN.md
 
 # workspace-VM delete workaround
 _to_delete/
+
+# wrangler local cache
+.wrangler/

@@ -15,6 +15,13 @@ export class UI {
   static showHUD() {
     UI.el('hud-top').style.display = 'flex';
     UI.el('hud-hint').style.display = 'flex';
+    // touch devices: show joystick/jump controls, adjust the hint
+    const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    if (isTouch) {
+      UI.el('touch-ui').style.display = 'block';
+      UI.el('hud-hint').querySelector('span').textContent =
+        'Left side: move · Right side: look around · ⬆️ jump';
+    }
   }
 
   static setTimer(seconds) {

@@ -148,14 +148,22 @@ export class Player {
     if (Input.down('KeyD') || Input.down('ArrowRight')) ix += 1;
     if (Input.down('KeyR')) { Player.die(); return; }
 
+    // analog touch stick takes over when active (magnitude scales speed)
+    const tm = Input.touchMove;
+    const tMag = Math.hypot(tm.x, tm.z);
+    if (tMag > 0.12) {
+      ix = tm.x / tMag;
+      iz = tm.z / tMag;
+    }
     const moving = ix !== 0 || iz !== 0;
     let wishX = 0, wishZ = 0;
     if (moving) {
       const len = Math.hypot(ix, iz);
       ix /= len; iz /= len;
+      const speed = Player.SPEED * (tMag > 0.12 ? Math.min(tMag, 1) : 1);
       const sin = Math.sin(cameraYaw), cos = Math.cos(cameraYaw);
-      wishX = (ix * cos - iz * sin) * Player.SPEED;
-      wishZ = (ix * sin + iz * cos) * Player.SPEED;
+      wishX = (ix * cos - iz * sin) * speed;
+      wishZ = (ix * sin + iz * cos) * speed;
     }
     // snappy accel / decel; extra air control around the jump apex
     const atApex = !Player.grounded && Math.abs(Player.vel.y) < Player.APEX_WINDOW;

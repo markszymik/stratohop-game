@@ -48,6 +48,10 @@ Then open the printed URL, type your name, pick a hero and a map, and go.
 hop, hold for full height · **mouse drag** orbit camera · **scroll** zoom ·
 **R** respawn at the last checkpoint.
 
+**Touch** (iPad/phone): left side of the screen is a floating joystick
+(analog — tilt further to run), right side drags the camera, big ⬆️ button
+jumps (hold for full height), ↻ respawns.
+
 ## Project layout
 
 ```
