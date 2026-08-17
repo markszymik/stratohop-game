@@ -13,7 +13,7 @@
 // ---------------------------------------------------------------------------
 export const Config = {
   VASK_KEY: '',
-  VASK_WS_HOST: 'ws.vask.dev',
+  VASK_WS_HOST: 'wss.vask.dev',
   VASK_WS_PORT: '443',
   VASK_FORCE_TLS: 'true',   // set 'false' for a local soketi dev server
   VASK_AUTH_ENDPOINT: '/api/vask/auth',

@@ -3,9 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "npx serve .",
-    "validate": "node tools/validate-maps.mjs",
-    "dev": "node tools/dev-server.mjs --mock"
+    "start": "node tools/dev-server.mjs",
+    "dev": "node tools/dev-server.mjs --mock",
+    "static": "npx serve .",
+    "validate": "node tools/validate-maps.mjs"
   },
   "devDependencies": {
     "ws": "^8.18.0"
